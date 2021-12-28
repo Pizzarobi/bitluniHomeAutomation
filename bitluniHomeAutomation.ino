@@ -22,13 +22,12 @@ I'll be pleased if you'd do it by sharing http://youtube.com/bitlunislab
 #include "WaveFunction.h"
 #include "RF.h"
 
-const char* ssid = "...";
-const char* password = "...";
+#include "credentials.h"
 
 ESP8266WebServer server(80);
 
 const int LED_PIN = D4;
-const int LED_COUNT = 300;
+const int LED_COUNT = 270;
 
 const int RF_OSC = 200;
 
