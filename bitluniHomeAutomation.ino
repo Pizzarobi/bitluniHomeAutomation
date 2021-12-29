@@ -21,17 +21,26 @@ I'll be pleased if you'd do it by sharing http://youtube.com/bitlunislab
 #include "SimpleRGBFunction.h"
 #include "WaveFunction.h"
 #include "RF.h"
+#include "simpleFunctions.h"
 
 #include "credentials.h"
 
 ESP8266WebServer server(80);
 
 const int LED_PIN = D4;
-const int LED_COUNT = 270;
+const int LED_COUNT = 280;
 
 const int RF_OSC = 200;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
+
+// Colors STANDARD
+const uint32_t RED = strip.Color(255,0,0);
+const uint32_t GREEN = strip.Color(0,255,0);
+const uint32_t BLUE = strip.Color(0,0,255);
+const uint32_t WHITE = strip.Color(100,100,100);
+// Colors Favourites
+const uint32_t LIGHT_RED = strip.Color(255,100,100);
 
 LedStates currentLedStates(strip);
 LedStates targetLedStates(strip);
@@ -44,6 +53,7 @@ void handleRoot() {
   String message = "<html><head></head><body style='font-family: sans-serif; font-size: 12px'>Following functions are available:<br><br>";
   message += "<a href='/rainbow?fade=3000'>/rainbow</a> a rainbow animation on LEDs<br>";
   message += "<a href='/wave?r=255&g=32&b=10&fade=5000'>/wave</a> a slow wave animation on LED on base color specified by arguments: r=<0..255> g=<0..255> b=<0..255><br>";
+  message += "<a href='/colorWipe'>/colorWipe</a> a Color Wipe animation on LEDs<br>";
   message += "<a href='/setleds?r=32&g=64&b=32&fade=1000'>/setleds</a> sets LEDs to the color from arguments: r=<0..255> g=<0..255> b=<0..255><br>";
   message += "<a href='/ledsoff?fade=500'>/ledsoff</a> turns off LEDs<br>";
   message += "<a href='/setpins?D1=128&D2=256&D3=512'>/setpins</a> sets to any of the in arguments specified pins (D0..D8) to their PWM values (0..1023). To use them digital: 0=off, 1023=on<br>";
@@ -121,6 +131,13 @@ void setup(void){
   WiFi.begin(ssid, password);
   Serial.println("");
 
+  
+  //strip.begin();
+  //strip.show(); // Initialize all pixels to 'off'
+  
+  // Initialize Color Light Red
+  //simpleColorWipe(RED,10,strip);
+
   // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -133,10 +150,10 @@ void setup(void){
   Serial.println(WiFi.localIP());
 
   //find it as http://lights.local
-  /*if (MDNS.begin("lights")) 
+  if (MDNS.begin("lights")) 
   {
     Serial.println("MDNS responder started");
-  }*/
+  }
   
   server.on("/", handleRoot);
 
@@ -150,6 +167,11 @@ void setup(void){
     WaveFunction *f = new WaveFunction();
     f->init(server);
     checkFadeAndSetLedFunction(f);
+  });
+
+  server.on("/colorWipe", [](){
+    server.send(200, "text/plain", "colorWipe");
+    simpleColorWipe(LIGHT_RED,10,strip);
   });
 
   server.on("/setleds", [](){
@@ -197,9 +219,13 @@ void setup(void){
 
   server.begin();
   Serial.println("HTTP server started");
+
   
   strip.begin();
-  strip.show(); // Initialize all pixels to 'off'
+  //strip.show(); // Initialize all pixels to 'off'
+  
+  // Start with rainbow animation
+  checkFadeAndSetLedFunction(new RainbowFunction());
 }
 
 void loop(void)
